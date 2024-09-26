@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ title }}</title>
+</head>
+<body>
+  <h1>{{ heading }}</h1>
+  <ul>
+    {% for survey in surveys %}
+      <li>
+        <strong>{{ survey.title }}</strong>
+        <a href="/survey/{{ survey.id }}">Take Survey</a>
+        <a href="/survey/{{ survey.id }}/results">View Results</a>
+      </li>
+    {% endfor %}
+  </ul>
+  <a href="/create-survey">Create New Survey</a>
+</body>
+</html>
