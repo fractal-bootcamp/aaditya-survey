@@ -1,0 +1,20 @@
+<html>
+<head>
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>{{ heading }}</h1>
+    <form action="/create-survey" method="POST">
+        <label>Survey Title:</label>
+        <input type="text" name="title" required><br>
+
+        <label>Question 1:</label>
+        <input type="text" name="questions" requred><br>
+
+        <label>Question 2:</label>
+        <input type="text" name="questions" requred><br>
+        
+        <button type="submit">Create Survey</button>
+    </form>
+</body>
+</html>
