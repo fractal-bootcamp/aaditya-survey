@@ -1,0 +1,16 @@
+{
+  "name": "survey",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.2",
+    "express": "^4.21.0"
+  }
+}
