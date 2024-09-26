@@ -154,6 +154,8 @@ app.get('/survey/:id/results', (req: Request<{ id: string }>, res: Response) => 
     return res.status(404).send('Survey not found');
   }
 
+  res.json(survey.responses);
+
   const templatePath = path.join(__dirname, 'templates', 'results.html');
   const template = fs.readFileSync(templatePath, 'utf8');
 
