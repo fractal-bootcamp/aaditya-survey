@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import "./App.css";
 import axios from "axios";
 
 const serverURL = "http://localhost:3000"; // Update with the actual server URL
@@ -88,6 +87,12 @@ function App() {
     setQuestions(updatedQuestions);
   };
 
+  // Function to delete a question by index
+  const deleteQuestion = (index: number) => {
+    const updatedQuestions = questions.filter((_, i) => i !== index);
+    setQuestions(updatedQuestions);
+  };
+
   // Fetch and display survey results
   const viewSurveyResults = async (surveyId: number) => {
     try {
@@ -99,87 +104,150 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>Create a New Survey</h1>
-      <form onSubmit={onSurveySubmit} style={{ display: "flex", flexDirection: "column" }}>
-        <label>
-          Survey Title:
-          <input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        {questions.map((question, index) => (
-          <label key={index}>
-            Question {index + 1}:
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f4f4', padding: '20px' }}>
+      <div style={{ maxWidth: '900px', width: '100%', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '20px' }}>Create a New Survey</h1>
+        <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={onSurveySubmit}>
+          <div>
+            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Survey Title:</label>
             <input
-              value={questions[index]}
-              onChange={(e) => handleQuestionChange(index, e.target.value)} // Use a function to update questions
+              style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter survey title"
             />
-          </label>
-        ))}
-        <button type="button" onClick={addQuestion}>
-          Add Another Question
-        </button>
-        <button type="submit">Create Survey</button>
-      </form>
-
-      <h2>Take a Survey</h2>
-      <div>
-        {surveys.length === 0 && <p>No surveys available</p>}
-        {surveys.map((survey) => (
-          <div key={survey.id}>
-            <h3>{survey.title}</h3>
-            <button onClick={() => setSelectedSurvey(survey)}>Take Survey</button>
           </div>
-        ))}
-      </div>
 
-      {selectedSurvey && (
-        <div>
-          <h2>Answer the Survey: {selectedSurvey.title}</h2>
-          <form onSubmit={onSurveyAnswerSubmit}>
-            {selectedSurvey.questions.map((question, index) => (
-              <label key={index}>
-                {question}
+          {questions.map((question, index) => (
+            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ flexGrow: 1 }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Question {index + 1}:</label>
                 <input
-                  type="text"
-                  value={answers[index] || ""}
-                  onChange={(e) => handleAnswerChange(index, e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
+                  value={questions[index]}
+                  onChange={(e) => handleQuestionChange(index, e.target.value)}
+                  placeholder={`Enter question ${index + 1}`}
                 />
-              </label>
-            ))}
-            <button type="submit">Submit Answers</button>
-          </form>
-        </div>
-      )}
-
-      <h2>Survey Results</h2>
-      <div>
-        {surveys.map((survey) => (
-          <div key={survey.id}>
-            <h3>{survey.title}</h3>
-            <button onClick={() => viewSurveyResults(survey.id)}>View Results</button>
-          </div>
-        ))}
-      </div>
-
-      {surveyResults && (
-        <div>
-          <h2>Survey Responses</h2>
-          {surveyResults.length === 0 ? (
-            <p>No responses yet</p>
-          ) : (
-            surveyResults.map((response, index) => (
-              <div key={index}>
-                <h4>Response {index + 1}</h4>
-                {response.map((answer, idx) => (
-                  <p key={idx}>
-                    Question {idx + 1}: {answer}
-                  </p>
-                ))}
               </div>
-            ))
-          )}
+              <button
+                type="button"
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#dc3545',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  height: 'fit-content',
+                  alignSelf: 'center',
+                }}
+                onClick={() => deleteQuestion(index)}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              type="button"
+              style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', borderRadius: '5px', border: 'none', cursor: 'pointer' }}
+              onClick={addQuestion}
+            >
+              Add Another Question
+            </button>
+            <button
+              type="submit"
+              style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', borderRadius: '5px', border: 'none', cursor: 'pointer' }}
+            >
+              Create Survey
+            </button>
+          </div>
+        </form>
+
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', textAlign: 'center', marginTop: '40px', marginBottom: '20px' }}>Take a Survey</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {surveys.length === 0 && <p style={{ textAlign: 'center' }}>No surveys available</p>}
+          {surveys.map((survey) => (
+            <div key={survey.id} style={{ padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)' }}>
+              <h3 style={{ fontWeight: 'bold', textAlign: 'center' }}>{survey.title}</h3>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  style={{ marginTop: '10px', padding: '10px 20px', backgroundColor: '#6f42c1', color: '#fff', borderRadius: '5px', border: 'none', cursor: 'pointer' }}
+                  onClick={() => setSelectedSurvey(survey)}
+                >
+                  Take Survey
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-      )}
+
+        {selectedSurvey && (
+          <div style={{ marginTop: '40px' }}>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '20px' }}>Answer the Survey: {selectedSurvey.title}</h2>
+            <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={onSurveyAnswerSubmit}>
+              {selectedSurvey.questions.map((question, index) => (
+                <div key={index}>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>{question}</label>
+                  <input
+                    type="text"
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
+                    value={answers[index] || ""}
+                    onChange={(e) => handleAnswerChange(index, e.target.value)}
+                    placeholder={`Answer question ${index + 1}`}
+                  />
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  type="submit"
+                  style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', borderRadius: '5px', border: 'none', cursor: 'pointer' }}
+                >
+                  Submit Answers
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', textAlign: 'center', marginTop: '40px', marginBottom: '20px' }}>Survey Results</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {surveys.map((survey) => (
+            <div key={survey.id} style={{ padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)' }}>
+              <h3 style={{ fontWeight: 'bold', textAlign: 'center' }}>{survey.title}</h3>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  style={{ marginTop: '10px', padding: '10px 20px', backgroundColor: '#6f42c1', color: '#fff', borderRadius: '5px', border: 'none', cursor: 'pointer' }}
+                  onClick={() => viewSurveyResults(survey.id)}
+                >
+                  View Results
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {surveyResults && (
+          <div style={{ marginTop: '40px' }}>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '20px' }}>Survey Responses</h2>
+            {surveyResults.length === 0 ? (
+              <p style={{ textAlign: 'center' }}>No responses yet</p>
+            ) : (
+              surveyResults.map((response, index) => (
+                <div key={index} style={{ marginBottom: '20px' }}>
+                  <h4 style={{ fontWeight: 'bold', textAlign: 'center' }}>Response {index + 1}</h4>
+                  {response.map((answer, idx) => (
+                    <p key={idx} style={{ textAlign: 'center' }}>
+                      Question {idx + 1}: {answer}
+                    </p>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
