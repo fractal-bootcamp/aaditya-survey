@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const serverURL = "http://localhost:3000"; // Update with the actual server URL
+const serverURL = "http://localhost:3000";
 
-// Define types for the survey and response
+
 type Survey = {
   id: number;
   title: string;
@@ -12,15 +12,14 @@ type Survey = {
 };
 
 function App() {
-  // State for surveys and survey responses
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState<string[]>([""]);
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
   const [answers, setAnswers] = useState<string[]>([]);
-  const [surveyResults, setSurveyResults] = useState<string[][] | null>(null); // To store survey responses
+  const [surveyResults, setSurveyResults] = useState<string[][] | null>(null);
 
-  // Fetch the surveys on load
+
   useEffect(() => {
     const fetchSurveys = async () => {
       try {
@@ -34,25 +33,24 @@ function App() {
     fetchSurveys();
   }, []);
 
-  // Function to handle form submission for survey creation
+
   const onSurveySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const newSurvey = { title, questions };
       const res = await axios.post(`${serverURL}/create-survey`, newSurvey);
 
-      // Update the surveys state with the new survey, including the id and responses
-      const createdSurvey = res.data as Survey; // Assuming backend returns the full survey with id and responses
+
+      const createdSurvey = res.data as Survey;
       setSurveys((prevSurveys) => [...prevSurveys, createdSurvey]);
 
-      setTitle(""); // Clear the form
-      setQuestions([""]); // Reset questions
+      setTitle(""); 
+      setQuestions([""]);
     } catch (error) {
       console.error("Error creating survey:", error);
     }
   };
 
-  // Function to handle submitting answers to a survey
   const onSurveyAnswerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedSurvey) {
@@ -68,36 +66,31 @@ function App() {
     }
   };
 
-  // Add a new question field to the survey creation form
   const addQuestion = () => {
     setQuestions([...questions, ""]);
   };
 
-  // Handle updating answers for a selected survey
   const handleAnswerChange = (index: number, value: string) => {
     const updatedAnswers = [...answers];
     updatedAnswers[index] = value;
     setAnswers(updatedAnswers);
   };
 
-  // Handle updating questions when creating a survey
   const handleQuestionChange = (index: number, value: string) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index] = value;
     setQuestions(updatedQuestions);
   };
 
-  // Function to delete a question by index
   const deleteQuestion = (index: number) => {
     const updatedQuestions = questions.filter((_, i) => i !== index);
     setQuestions(updatedQuestions);
   };
 
-  // Fetch and display survey results
   const viewSurveyResults = async (surveyId: number) => {
     try {
       const res = await axios.get(`${serverURL}/survey/${surveyId}/results`);
-      setSurveyResults(res.data); // Store the survey responses in state
+      setSurveyResults(res.data);
     } catch (error) {
       console.error("Error fetching survey results:", error);
     }
