@@ -1,7 +1,5 @@
 import express from 'express';
-import path from 'path';
 import cors from 'cors';
-import fs from 'fs';
 
 // Use type-only imports for types
 import type { Request, Response } from 'express';
@@ -11,7 +9,6 @@ const port = 3000;
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
 // In-memory storage for surveys and questions
@@ -25,149 +22,76 @@ interface Survey {
 let surveys: Survey[] = [];
 let surveyIdCounter = 1;
 
-// Helper functions for template handling
-const getNestedValue = (obj: any, path: string): any => {
-  return path.split('.').reduce((acc, key) => acc && acc[key], obj);
-};
-
-const processIfStatements = (template: string, variables: Record<string, any>): string => {
-  const ifRegex = /{%\s*if\s+([.\w]+)\s*%}([\s\S]*?){%\s*endif\s*%}/g;
-  return template.replace(ifRegex, (match, condition, content) => {
-    const value = getNestedValue(variables, condition);
-    return value ? content : '';
-  });
-};
-
-const processForLoops = (template: string, variables: Record<string, any>): string => {
-  const forRegex = /{%\s*for\s+(\w+)\s+in\s+([.\w]+)\s*%}([\s\S]*?){%\s*endfor\s*%}/g;
-  return template.replace(forRegex, (match, item, list, content) => {
-    const listValue = getNestedValue(variables, list);
-    if (Array.isArray(listValue)) {
-      return listValue.map(itemValue => processVariables(content, { [item]: itemValue })).join('');
-    }
-    return '';
-  });
-};
-
-const processVariables = (template: string, variables: Record<string, any>): string => {
-  const variableRegex = /{{([\s\S]*?)}}/g;
-  return template.replace(variableRegex, (match, path) => {
-    const trimmedPath = path.trim();
-    const value = getNestedValue(variables, trimmedPath);
-    return value !== undefined ? String(value) : '';
-  });
-};
-
-const injectTemplateVariables = (template: string, variables: Record<string, any>): string => {
-  let result = template;
-  result = processIfStatements(result, variables);
-  result = processForLoops(result, variables);
-  result = processVariables(result, variables);
-  return result;
-};
-
 // Routes
 
-// List of surveys
-app.get('/', (req: Request, res: Response) => {
-  const templatePath = path.join(__dirname, 'templates', 'index.html');
-  const template = fs.readFileSync(templatePath, 'utf8');
-
-  const html = injectTemplateVariables(template, {
-    title: 'Survey List',
-    heading: 'Available Surveys',
-    surveys,
-  });
-
-  res.send(html);
-});
-
-// Survey creation form
-app.get('/create-survey', (req: Request, res: Response) => {
-  const templatePath = path.join(__dirname, 'templates', 'create-survey.html');
-  const template = fs.readFileSync(templatePath, 'utf8');
-
-  const html = injectTemplateVariables(template, {
-    title: 'Create Survey',
-    heading: 'Create a New Survey',
-  });
-
-  res.send(html);
+// API endpoint to get the list of surveys in JSON format
+app.get('/surveys', (req: Request, res: Response) => {
+  res.json(surveys);
 });
 
 // Survey creation POST
 app.post('/create-survey', (req: Request, res: Response) => {
   const { title, questions } = req.body;
+  
+  if (!title || !questions) {
+    return res.status(400).json({ error: 'Title and questions are required' });
+  }
+
   const newSurvey: Survey = {
     id: surveyIdCounter++,
     title,
-    questions: Array.isArray(questions) ? questions : [questions],
+    questions: Array.isArray(questions) ? questions : [questions],  // Ensure questions is an array
     responses: [],
   };
+  
   surveys.push(newSurvey);
-  res.status(201).json(newSurvey);
-
-  res.redirect('/');
+  res.status(201).json(newSurvey);  // Send JSON response
 });
 
-// Survey submission form
+// API endpoint to get a single survey by ID
 app.get('/survey/:id', (req: Request<{ id: string }>, res: Response) => {
   const surveyId = parseInt(req.params.id, 10);
   const survey = surveys.find(s => s.id === surveyId);
 
   if (!survey) {
-    return res.status(404).send('Survey not found');
+    return res.status(404).json({ error: 'Survey not found' });
   }
 
-  const templatePath = path.join(__dirname, 'templates', 'take-survey.html');
-  const template = fs.readFileSync(templatePath, 'utf8');
-
-  const html = injectTemplateVariables(template, {
-    title: `Take Survey: ${survey.title}`,
-    survey,
-  });
-
-  res.send(html);
+  res.json(survey);
 });
 
-// Submit survey responses
+// API endpoint to submit survey responses
 app.post('/survey/:id/submit', (req: Request<{ id: string }>, res: Response) => {
   const surveyId = parseInt(req.params.id, 10);
   const survey = surveys.find(s => s.id === surveyId);
 
   if (!survey) {
-    return res.status(404).send('Survey not found');
+    return res.status(404).json({ error: 'Survey not found' });
   }
 
   const { answers } = req.body;
-  survey.responses.push(Array.isArray(answers) ? answers : [answers]);
 
-  res.send("<h1>Thank you for submitting!</h1><a href='/'>Back to Survey List</a>");
+  if (!Array.isArray(answers)) {
+    return res.status(400).json({ error: 'Answers should be an array' });
+  }
+
+  survey.responses.push(answers);
+  res.json({ message: 'Survey submitted successfully' });
 });
 
-// View survey results
+// API endpoint to get survey results
 app.get('/survey/:id/results', (req: Request<{ id: string }>, res: Response) => {
   const surveyId = parseInt(req.params.id, 10);
   const survey = surveys.find(s => s.id === surveyId);
 
   if (!survey) {
-    return res.status(404).send('Survey not found');
+    return res.status(404).json({ error: 'Survey not found' });
   }
 
-  res.json(survey.responses);
-
-  const templatePath = path.join(__dirname, 'templates', 'results.html');
-  const template = fs.readFileSync(templatePath, 'utf8');
-
-  const html = injectTemplateVariables(template, {
-    title: `Results for ${survey.title}`,
-    survey,
-  });
-
-  res.send(html);
+  res.json({ title: survey.title, responses: survey.responses });
 });
 
-// Start server
+// Start the server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server running on http://localhost:${port}`);
 });
